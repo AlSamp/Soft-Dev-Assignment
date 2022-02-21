@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AssignmentSetup
 {
-    public class LightManager : Manager, ILightManager
+    public class DoorManager : Manager, IDoorManager
     {
         public override void SetStatus(string input)
         {
@@ -16,13 +16,21 @@ namespace AssignmentSetup
         {
             return status;
         }
-        public void SetLight(bool isOn, int lightId)
+        public bool OpenDoor(int doorId)
         {
-
+            return true;
         }
-        public void SetAllLights(bool isOn)
+        public bool LockDoor(int doorId)
         {
-
+            return true;
+        }
+        public bool OpenAllDoors()
+        {
+            return true;
+        }
+        public bool LockAllDoors()
+        {
+            return true;
         }
     }
 }

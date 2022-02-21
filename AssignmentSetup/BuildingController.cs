@@ -89,7 +89,12 @@ namespace AssignmentSetup
             else if(currentState == "out of hours" && state == "open") // out of hours -> open
             {             
                 currentState = "open";
+                //L3R4
+                
+
+
                 return true;
+                //return doorManager.OpenAllDoors();
             }
             else if (currentState == "open" && state == "out of hours") // open -> out of hours
             {              
@@ -125,25 +130,15 @@ namespace AssignmentSetup
             buildingID = id;
         }
 
-        public string GetStatusReport()
+        public string GetStatusReport(string lightStatus, string doorStatus, string fireAlarmStatus)
         {
-
-            return "";
+            //appends all the reports together
+            string statusReport = lightStatus + doorStatus + fireAlarmStatus ; 
+            //return the appended rport
+            return statusReport;
             
         }
 
 
-        //L3R2
-
-        public string GetAllManagerStatus()
-        {
-
-            return "";
-        }
-
-        //public void GetAllManagerStatus()
-        //{
-        //    _lightManager.
-        //}
     }
 }

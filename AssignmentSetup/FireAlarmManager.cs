@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AssignmentSetup
 {
-    public class LightManager : Manager, ILightManager
+    public class FireAlarmManager : Manager, IFireAlarmManager
     {
         public override void SetStatus(string input)
         {
@@ -16,11 +16,7 @@ namespace AssignmentSetup
         {
             return status;
         }
-        public void SetLight(bool isOn, int lightId)
-        {
-
-        }
-        public void SetAllLights(bool isOn)
+        public void SetAlarm(bool isActive)
         {
 
         }

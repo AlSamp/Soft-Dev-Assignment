@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AssignmentSetup
 {
-   abstract public class Manager : IManager
+   abstract public class Manager 
     {
         private bool engineerRequired;
         public string status;

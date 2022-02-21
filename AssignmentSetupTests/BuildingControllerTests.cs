@@ -138,25 +138,59 @@ namespace AssignmentSetupTests
         }
 
 
-        [Test]
-        public void Output_AllManagerStatus_WithResults()
+        // L3R2 L3R3
+        [Test]// dependency injection test
+        public void GetStatusReport_GetsAllManagerStatus_ReturnStringResult()
         {
-            // arrange
+            // arrange 
             string id = "CT001";
-            ILightManager iLightManager = Substitute.For<ILightManager>();
-            IFireAlarmManager MockFireAlarmManager = Substitute.For<IFireAlarmManager>();
-            IDoorManager MockDoorManager = Substitute.For<IDoorManager>();
-            IWebService MockWebService = Substitute.For<IWebService>();
-            IEmailService MockEmailService = Substitute.For<IEmailService>();
+            LightManager iLightManager = Substitute.For<LightManager>();
+            FireAlarmManager iFireAlarmManager = Substitute.For<FireAlarmManager>();
+            DoorManager iDoorManager = Substitute.For<DoorManager>();
+            WebService iWebService = Substitute.For<WebService>();
+            EmailService iEmailService = Substitute.For<EmailService>();
 
-            BuildingController bc = new BuildingController(id, MockLightManager, MockFireAlarmManager, MockDoorManager, MockWebService, MockEmailService);
+            BuildingController bc = new BuildingController(id, iLightManager, iFireAlarmManager, iDoorManager, iWebService, iEmailService);
 
-            // assert 
-            
-            
+            iLightManager.GetStatus().Returns("Lights,OK,OK,FAULT,");
+            iDoorManager.GetStatus().Returns("Doors,OK,OK,OK,");
+            iFireAlarmManager.GetStatus().Returns("FireAlarm,OK,");
 
-            //act
+            // act
+            string report = bc.GetStatusReport(iLightManager.GetStatus(),iDoorManager.GetStatus(),iFireAlarmManager.GetStatus());
+
+            //assert
+            Assert.AreEqual(report, "Lights,OK,OK,FAULT,Doors,OK,OK,OK,FireAlarm,OK,");
+        }
+
+
+        [Test] //L3R4
+        public void SetCurrentState_OpenAllDoorWhenBuildingOpens()
+        {
+            // arrange 
+            string id = "CT001";
+            LightManager iLightManager = Substitute.For<LightManager>();
+            FireAlarmManager iFireAlarmManager = Substitute.For<FireAlarmManager>();
+            DoorManager iDoorManager = Substitute.For<DoorManager>();
+            WebService iWebService = Substitute.For<WebService>();
+            EmailService iEmailService = Substitute.For<EmailService>();
+
+            BuildingController bc = new BuildingController(id, iLightManager, iFireAlarmManager, iDoorManager, iWebService, iEmailService);
+
+            iLightManager.GetStatus().Returns("Lights,OK,OK,FAULT,");
+            iDoorManager.GetStatus().Returns("Doors,OK,OK,OK,");
+            iFireAlarmManager.GetStatus().Returns("FireAlarm,OK,");
+
+
+            // act
+            string report = bc.GetStatusReport(iLightManager.GetStatus(), iDoorManager.GetStatus(), iFireAlarmManager.GetStatus());
+
+            //assert
+            Assert.AreEqual(report, "Lights,OK,OK,FAULT,Doors,OK,OK,OK,FireAlarm,OK,");
         }
     }
+
+
+
 }
         

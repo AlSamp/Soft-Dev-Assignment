@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace AssignmentSetup
 {
-    class WebService : IWebService
+    public class WebService : IWebService
     {
+
         public void LogStateChange(string logDetails)
         {
 
