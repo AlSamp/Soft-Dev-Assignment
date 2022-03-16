@@ -6,12 +6,10 @@ using System.Threading.Tasks;
 
 namespace AssignmentSetup
 {
-    public class EmailService : IEmailService
+    public interface IManager
     {
-       public void SendMail(string emailAddress, string subject, string message)
-       {
+        string GetStatus();
 
-       }
-
+        bool SetEngineerRequired(bool needsEngineer);
     }
 }

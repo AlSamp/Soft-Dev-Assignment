@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AssignmentSetup
 {
-    public interface IFireAlarmManager
+    public interface IFireAlarmManager : IManager
     {
         void SetAlarm(bool isActive);
     }

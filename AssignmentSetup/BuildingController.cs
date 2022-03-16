@@ -9,22 +9,18 @@ using NSubstitute;
 
 namespace AssignmentSetup 
 {
-
-    static public class CGlobals
-    {
-        public static string previousState; // remember the state when there a fire alarm or fire drill.
-    }
-
     public class BuildingController 
     {
+
         private IWebService        webService;
         private IEmailService      emailService;
         private ILightManager      lightManager;
         private IDoorManager       doorManager;
         private IFireAlarmManager  fireAlarmManager;
 
-        private string buildingID = "out of hours"; // needs to be set as default as a state will need to be remebered if there is an immediate fire drill/alarm;
-        private string currentState;
+        private string buildingID;
+        private string currentState; 
+        private string previousState;
 
         
         public BuildingController(string id, ILightManager iLightManager, IFireAlarmManager iFireAlarmManager,
@@ -36,6 +32,11 @@ namespace AssignmentSetup
             fireAlarmManager = iFireAlarmManager;
             webService = iWebService;
             emailService = iEmailService;
+
+            currentState = "out of hours"; // needs to be set as default as a state will need to be remebered if there is an immediate fire drill/alarm;
+            buildingID = id.ToLower();
+
+
         }
 
         public BuildingController(string newID)
@@ -68,7 +69,7 @@ namespace AssignmentSetup
         {
             if(currentState == "fire drill" || currentState == "fire alarm") // turn drill/alarm off and return to previous state
             {
-                currentState = CGlobals.previousState;
+                currentState = previousState;
             }
 
 
@@ -82,19 +83,27 @@ namespace AssignmentSetup
                 return true;
             }
             else if (currentState == "out of hours" && state == "closed") // out of hours -> closed
-            {                
+            {
+                //L4R1
                 currentState = "closed";
+                doorManager.LockAllDoors(); // lock all doors
+                lightManager.SetAllLights(false); // turn off all lights isOn = false
                 return true;
             }
             else if(currentState == "out of hours" && state == "open") // out of hours -> open
             {             
-                currentState = "open";
                 //L3R4
-                
-
-
-                return true;
-                //return doorManager.OpenAllDoors();
+                //L3R5
+                if (doorManager.OpenAllDoors() == true)
+                {
+                    currentState = "open";
+                    return true;
+                }
+                else
+                {
+                    // currentState will remain unchanged
+                    return false;
+                }
             }
             else if (currentState == "open" && state == "out of hours") // open -> out of hours
             {              
@@ -103,14 +112,21 @@ namespace AssignmentSetup
             }
             else if (state == "fire drill")
             {
-                CGlobals.previousState = currentState;
+                previousState = currentState;
                 currentState = "fire drill";
                 return true;
             }
             else if (state == "fire alarm")
             {
-                CGlobals.previousState = currentState;
+                previousState = currentState;
                 currentState = "fire alarm";
+                //L4R2
+     
+                fireAlarmManager.SetAlarm(true);    // turn on the fire alarm.
+                doorManager.OpenAllDoors();         // Open all doors so people can escape.
+                lightManager.SetAllLights(true);    // turn on all lights.
+                webService.LogFireAlarm("fire alarm"); // log that the fire alarm has gone off.
+
                 return true;
             }
             else
@@ -132,8 +148,125 @@ namespace AssignmentSetup
 
         public string GetStatusReport(string lightStatus, string doorStatus, string fireAlarmStatus)
         {
+            
+            // check for faults with the lights.
+            string faultStatus = "";
+            bool lightFault = false;
+            string target = "FAULT,";
+            string section = "";
+            int targetIndex = 0;
+            int compareIndex = 0;
+            for (int i = 0; i < lightStatus.Length; i++)
+            {
+                if (lightStatus[i] == target[targetIndex]) // once the start matches compare the rest of the string
+                {
+                    compareIndex = i;
+
+                    for (int j = 0; j < target.Length; j++)
+                    {
+                        section += lightStatus[compareIndex]; // appended should make fault
+                        compareIndex++;
+                        targetIndex++;
+                    }
+                    targetIndex = 0; // reset target index
+
+                }
+                if (section == target && lightFault == false) // if a fault has been detected, log a fault with the lights
+                {
+                    lightFault = true;
+                    faultStatus += "Lights,"; // Append fault status
+                }
+                else // reset section for the next attempt
+                {
+                    section = "";
+                }
+            }
+
+            // check for faults with the doors.
+            targetIndex = 0; // reset target index
+            bool doorFault = false;
+            section = "";
+            targetIndex = 0;
+            compareIndex = 0;
+            for (int i = 0; i < doorStatus.Length; i++)
+            {
+                if (doorStatus[i] == target[targetIndex]) // once the start matches compare the rest of the string
+                {
+                    compareIndex = i;
+
+                    for (int j = 0; j < target.Length; j++)
+                    {
+                        section += doorStatus[compareIndex]; // appended should make fault
+                        compareIndex++;
+                        targetIndex++;
+                    }
+                    targetIndex = 0; // reset target index
+
+                }
+                if (section == target && doorFault == false) // if a fault has been detected, log a fault with the lights
+                {
+                    doorFault = true;
+                    faultStatus += "Doors,"; // Append fault status
+                }
+                else // reset section for the next attempt
+                {
+                    section = "";
+                }
+            }
+
+            // check for faults with the fire alarm.
+            targetIndex = 0; // reset target index
+            bool fireAlarmFault = false;
+            section = "";
+            targetIndex = 0;
+            compareIndex = 0;
+            for (int i = 0; i < fireAlarmStatus.Length; i++)
+            {
+                if (fireAlarmStatus[i] == target[targetIndex]) // once the start matches compare the rest of the string
+                {
+                    compareIndex = i;
+
+                    for (int j = 0; j < target.Length; j++)
+                    {
+                        section += fireAlarmStatus[compareIndex]; // appended should make fault
+                        compareIndex++;
+                        targetIndex++;
+                    }
+                    targetIndex = 0; // reset target index
+
+                }
+                if (section == target && fireAlarmFault == false) // if a fault has been detected, log a fault with the lights
+                {
+                    fireAlarmFault = true;
+                    faultStatus += "FireAlarm,"; // Append fault status
+                }
+                else // reset section for the next attempt
+                {
+                    section = "";
+                }
+            }
+
+            // status report if faults detected.
+            if(faultStatus != "") // if there is a fault log engineer required.
+            {
+                webService.LogEngineerRequired(faultStatus); 
+            }
+
+            //L4R4
+            try
+            {              
+                // report to webservice
+                webService.LogFireAlarm(fireAlarmStatus);
+            }
+            catch(Exception e) // if exception is thrown from the webservice about the fire alarm send emaill with exception message
+            {
+                emailService.SendMail("smartbuilding@uclan.ac.uk", "failed to log alarm", e.Message.ToString());
+            }
+
+          
             //appends all the reports together
-            string statusReport = lightStatus + doorStatus + fireAlarmStatus ; 
+            string statusReport = lightStatus + doorStatus + fireAlarmStatus ;
+
             //return the appended rport
             return statusReport;
             

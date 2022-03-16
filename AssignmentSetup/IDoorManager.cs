@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AssignmentSetup
 {
-   public interface IDoorManager 
+   public interface IDoorManager : IManager
     {
         bool OpenDoor(int doorId);
         bool LockDoor(int doorId);
